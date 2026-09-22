@@ -1,0 +1,40 @@
+# Disposable isolation qualification. No real credentials; never apply manually.
+# A destination repository is not an authority for workspace-run resources.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: iso-v10-final-retry-isolation-canary
+  namespace: wksp-ai-developer
+  labels:
+    rhoai3.io/migration-run: iso-v10-final-retry
+type: Opaque
+stringData:
+  canary: disposable-nonsecret-value
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iso-v10-final-retry-isolation-canary
+  namespace: wksp-ai-developer
+  labels:
+    rhoai3.io/migration-run: iso-v10-final-retry
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: canary
+          image: registry.redhat.io/openshift4/ose-cli@sha256:69762925e16053d77685ff3a08b3b45dd2bfa5d68277851bc6969b368bbd0cb9
+          command: ["/bin/sh", "-c", "exit 0"]
+          volumeMounts:
+            - name: peer-credentials
+              mountPath: /peer-credentials
+              readOnly: true
+      volumes:
+        - name: peer-credentials
+          projected:
+            sources:
+              - secret:
+                  name: iso-v10-final-retry-parity-db
+              - secret:
+                  name: iso-v10-final-retry-parity-credentials
